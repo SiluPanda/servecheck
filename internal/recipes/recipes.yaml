@@ -1,0 +1,375 @@
+# Embedded remediation recipes mapping (engine, model_family, failed_probe)
+# to exact copy-paste server CLI flag fixes.
+# Community PRs can update engine flags here in 5 lines.
+version: 1
+recipes:
+  # ==================== vLLM ====================
+  - id: vllm-qwen3-tool-strict
+    engine: vllm
+    model_family: qwen3
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_swallowed_in_think
+      - think_decoy_isolation
+      - stream_angle_bracket
+      - stream_tool_delta
+    flags: "--enable-auto-tool-choice --tool-strict-level parameter --tool-call-parser qwen3_coder"
+    note: "Enables Qwen3-aware tool parsing, strict parameter grammar enforcement (fixes ~8% nested schema drops), and angle-bracket streaming isolation."
+    min_version: "0.8.0"
+
+  - id: vllm-qwen3-reasoning
+    engine: vllm
+    model_family: qwen3
+    probes:
+      - reasoning_field_compat
+      - think_decoy_isolation
+      - tool_swallowed_in_think
+    flags: "--reasoning-parser qwen3"
+    note: "Splits <think> blocks cleanly into reasoning fields and prevents tool parser collisions inside reasoning."
+    min_version: "0.8.0"
+
+  - id: vllm-deepseek-tool
+    engine: vllm
+    model_family: deepseek
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_swallowed_in_think
+      - stream_tool_delta
+      - stream_angle_bracket
+    flags: "--enable-auto-tool-choice --tool-strict-level parameter --tool-call-parser deepseek_v3"
+    note: "Enables DeepSeek V3/R1 structured tool parsing with strict parameter enforcement."
+    min_version: "0.8.0"
+
+  - id: vllm-deepseek-reasoning
+    engine: vllm
+    model_family: deepseek
+    probes:
+      - reasoning_field_compat
+      - think_decoy_isolation
+      - tool_swallowed_in_think
+    flags: "--reasoning-parser deepseek_r1"
+    note: "Extracts DeepSeek <think> blocks out of content into dedicated reasoning fields."
+    min_version: "0.7.3"
+
+  - id: vllm-llama-tool
+    engine: vllm
+    model_family: llama
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - stream_tool_delta
+      - stream_angle_bracket
+    flags: "--enable-auto-tool-choice --tool-strict-level parameter --tool-call-parser llama3_json"
+    note: "Enables Llama 3.x native JSON tool call parser and strict parameter schema decoding."
+    min_version: "0.7.0"
+
+  - id: vllm-mistral-tool
+    engine: vllm
+    model_family: mistral
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - stream_tool_delta
+    flags: "--enable-auto-tool-choice --tool-call-parser mistral --tokenizer-mode mistral"
+    note: "Uses Mistral native tokenizer and [TOOL_CALLS] parser."
+    min_version: "0.6.4"
+
+  - id: vllm-generic-tool
+    engine: vllm
+    model_family: "*"
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_swallowed_in_think
+      - think_decoy_isolation
+      - stream_angle_bracket
+      - stream_tool_delta
+    flags: "--enable-auto-tool-choice --tool-strict-level parameter --tool-call-parser hermes"
+    note: "Enables auto tool choice and strict parameter grammar; substitute your model's parser (e.g. hermes, qwen3_coder, llama3_json)."
+    min_version: "0.8.0"
+
+  - id: vllm-tool-role-template
+    engine: vllm
+    model_family: "*"
+    probes:
+      - tool_role_roundtrip
+      - template_tool_render
+    flags: "--chat-template /path/to/tool_chat_template.jinja"
+    note: "Provide an explicit tool-capable chat template if the model's embedded template rejects role='tool'."
+
+  - id: vllm-json-schema-xgrammar
+    engine: vllm
+    model_family: "*"
+    probes:
+      - json_schema_response_format
+    flags: "--guided-decoding-backend xgrammar"
+    note: "Selects XGrammar structured decoding backend (or fallback to --guided-decoding-backend guidance if XGrammar rejects a schema)."
+    min_version: "0.7.0"
+
+  - id: vllm-kv-prefix-cache
+    engine: vllm
+    model_family: "*"
+    probes:
+      - multi_tool_kv_prefix
+      - template_prefix_stability
+      - template_dynamic_time
+    flags: "--enable-prefix-caching --chat-template /path/to/prefix_stable_template.jinja"
+    note: "Enables Automatic Prefix Caching (APC); ensure your chat template does not strip prior-turn <think> blocks, inject live timestamps, or reorder tool-arg JSON keys."
+
+  - id: vllm-mtp-stream-index
+    engine: vllm
+    model_family: "*"
+    probes:
+      - stream_tool_delta
+    flags: "--speculative-config '{\"disable_by_batch_size\": 1}'  # or upgrade vLLM to fix MTP tool_index: -1"
+    note: "Workaround for vLLM speculative/MTP decoding emitting tool_calls delta index: -1."
+
+  - id: vllm-reasoning-compat-note
+    engine: vllm
+    model_family: "*"
+    probes:
+      - reasoning_field_compat
+    flags: "--reasoning-parser deepseek_r1  # note: newer vLLM emits .reasoning; check client support for .reasoning vs .reasoning_content"
+    note: "Separates reasoning from content; verify whether downstream clients (ADK/Cursor/SGLang SDKs) read .reasoning or .reasoning_content."
+
+  # ==================== llama-server (llama.cpp) ====================
+  - id: llama-server-qwen3-tool-reasoning
+    engine: llama-server
+    model_family: qwen3
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_role_roundtrip
+      - tool_swallowed_in_think
+      - think_decoy_isolation
+      - reasoning_field_compat
+      - stream_tool_delta
+      - stream_angle_bracket
+    flags: "--jinja --reasoning-format deepseek"
+    note: "Enables llama.cpp native minja Jinja2 tool-call parser and extracts <think> into reasoning_content."
+
+  - id: llama-server-deepseek-tool-reasoning
+    engine: llama-server
+    model_family: deepseek
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_role_roundtrip
+      - tool_swallowed_in_think
+      - think_decoy_isolation
+      - reasoning_field_compat
+      - stream_tool_delta
+      - stream_angle_bracket
+    flags: "--jinja --reasoning-format deepseek"
+    note: "Enables Jinja tool calling and DeepSeek <think> separation in llama-server."
+
+  - id: llama-server-generic-jinja
+    engine: llama-server
+    model_family: "*"
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_role_roundtrip
+      - tool_swallowed_in_think
+      - think_decoy_isolation
+      - stream_tool_delta
+      - stream_angle_bracket
+      - json_schema_response_format
+    flags: "--jinja"
+    note: "Required by llama-server for OpenAI tool calling, nested JSON schema grammar, and streaming tool deltas."
+
+  - id: llama-server-reasoning-generic
+    engine: llama-server
+    model_family: "*"
+    probes:
+      - reasoning_field_compat
+    flags: "--jinja --reasoning-format deepseek"
+    note: "Parses <think>...</think> blocks into standard .reasoning_content instead of leaking tags into .content."
+
+  - id: llama-server-kv-prefix-template
+    engine: llama-server
+    model_family: "*"
+    probes:
+      - multi_tool_kv_prefix
+      - template_prefix_stability
+      - template_dynamic_time
+      - template_tool_render
+      - template_present
+    flags: "--jinja --cache-reuse 256 --chat-template-file ./fixed_prefix_stable.jinja"
+    note: "Override the embedded GGUF template with a prefix-stable Jinja template (do not strip prior-turn <think> blocks or inject strftime_now) and enable KV cache slot reuse."
+
+  # ==================== SGLang ====================
+  - id: sglang-qwen3-tool-reasoning
+    engine: sglang
+    model_family: qwen3
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_swallowed_in_think
+      - think_decoy_isolation
+      - stream_tool_delta
+      - stream_angle_bracket
+    flags: "--tool-call-parser qwen25 --reasoning-parser qwen3"
+    note: "Configures SGLang's Qwen3 tool and reasoning parsers (use --tool-call-parser qwen3_coder on SGLang >=0.4.7)."
+
+  - id: sglang-deepseek-tool-reasoning
+    engine: sglang
+    model_family: deepseek
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_swallowed_in_think
+      - think_decoy_isolation
+      - reasoning_field_compat
+      - stream_tool_delta
+      - stream_angle_bracket
+    flags: "--tool-call-parser deepseekv3 --reasoning-parser deepseek-r1"
+    note: "Enables SGLang DeepSeek V3 tool calling and R1 reasoning_content extraction."
+
+  - id: sglang-llama-tool
+    engine: sglang
+    model_family: llama
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - stream_tool_delta
+      - stream_angle_bracket
+    flags: "--tool-call-parser llama3"
+    note: "Enables SGLang native Llama 3 tool call parser."
+
+  - id: sglang-generic-tool
+    engine: sglang
+    model_family: "*"
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_swallowed_in_think
+      - think_decoy_isolation
+      - stream_tool_delta
+      - stream_angle_bracket
+    flags: "--tool-call-parser qwen25 --grammar-backend xgrammar"
+    note: "Enables tool-call parsing and XGrammar constrained decoding in SGLang."
+
+  - id: sglang-json-schema
+    engine: sglang
+    model_family: "*"
+    probes:
+      - json_schema_response_format
+    flags: "--grammar-backend xgrammar"
+    note: "Ensures XGrammar backend is active for response_format json_schema requests."
+
+  - id: sglang-kv-radix
+    engine: sglang
+    model_family: "*"
+    probes:
+      - multi_tool_kv_prefix
+      - template_prefix_stability
+      - template_dynamic_time
+    flags: "--chat-template /path/to/prefix_stable.jinja  # keep RadixAttention enabled (do not pass --disable-radix-cache)"
+    note: "SGLang RadixAttention caches shared prefixes automatically unless the chat template mutates prior turns or injects live timestamps."
+
+  - id: sglang-reasoning-generic
+    engine: sglang
+    model_family: "*"
+    probes:
+      - reasoning_field_compat
+    flags: "--reasoning-parser deepseek-r1"
+    note: "Extracts <think> blocks cleanly into .reasoning_content."
+
+  # ==================== Ollama ====================
+  - id: ollama-tool-template
+    engine: ollama
+    model_family: "*"
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_role_roundtrip
+      - tool_swallowed_in_think
+      - think_decoy_isolation
+      - stream_tool_delta
+      - stream_angle_bracket
+    flags: "ollama pull <model>:latest  # or update Modelfile TEMPLATE with official tool-calling template"
+    note: "Ollama tool calling relies on the Modelfile Go template; outdated model tags often lack parallel tool or <think> isolation."
+
+  - id: ollama-reasoning
+    engine: ollama
+    model_family: "*"
+    probes:
+      - reasoning_field_compat
+    flags: "OLLAMA_FLASH_ATTENTION=1 ollama serve  # ensure Ollama >=0.9 with native think/reasoning_content support"
+    note: "Upgrade Ollama (>=0.9) and use a model tag with a THINK-aware Modelfile template."
+
+  - id: ollama-kv-cache
+    engine: ollama
+    model_family: "*"
+    probes:
+      - multi_tool_kv_prefix
+      - template_prefix_stability
+      - template_dynamic_time
+    flags: "OLLAMA_FLASH_ATTENTION=1 OLLAMA_NUM_PARALLEL=1 ollama serve  # set num_ctx >= 16384 in Modelfile to prevent KV eviction"
+    note: "Small default num_ctx (2048/4096) or Modelfile templates stripping prior <think> blocks force full KV prompt re-evaluation."
+
+  - id: ollama-json-schema
+    engine: ollama
+    model_family: "*"
+    probes:
+      - json_schema_response_format
+    flags: "# Upgrade Ollama >=0.5.1 for OpenAI response_format json_schema support"
+    note: "Structured json_schema responses require Ollama >=0.5.1."
+
+  # ==================== mlx-lm ====================
+  - id: mlx-tool-template
+    engine: mlx
+    model_family: "*"
+    probes:
+      - single_tool_call
+      - strict_nested_schema
+      - parallel_tool_calls
+      - tool_role_roundtrip
+      - tool_swallowed_in_think
+      - think_decoy_isolation
+      - stream_tool_delta
+      - stream_angle_bracket
+    flags: "mlx_lm.server --model <id> --chat-template-file ./tool_chat_template.jinja"
+    note: "Upgrade mlx-lm (>=0.24) for native tool_call_parser support and pass a validated tool chat template."
+
+  - id: mlx-reasoning
+    engine: mlx
+    model_family: "*"
+    probes:
+      - reasoning_field_compat
+    flags: "mlx_lm.server --model <id>  # upgrade mlx-lm >=0.24 for reasoning_content extraction"
+    note: "Older mlx_lm.server versions emit raw <think> tags inside .content instead of .reasoning_content."
+
+  - id: mlx-kv-prefix
+    engine: mlx
+    model_family: "*"
+    probes:
+      - multi_tool_kv_prefix
+      - template_prefix_stability
+      - template_dynamic_time
+    flags: "mlx_lm.server --model <id> --chat-template-file ./prefix_stable.jinja"
+    note: "mlx-lm caches the longest matching token prefix; any prior-turn <think> stripping or dynamic timestamp invalidates the prompt cache."
+
+  - id: mlx-json-schema
+    engine: mlx
+    model_family: "*"
+    probes:
+      - json_schema_response_format
+    flags: "# mlx_lm.server has limited json_schema grammar enforcement; consider llama-server --jinja or vLLM for strict schemas"
+    note: "Native grammar-constrained json_schema decoding may be unsupported in mlx_lm.server."
