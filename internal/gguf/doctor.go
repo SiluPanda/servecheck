@@ -17,8 +17,8 @@ import (
 	"github.com/nikolalohinski/gonja/v2/exec"
 	"github.com/nikolalohinski/gonja/v2/loaders"
 
-	"github.com/servecheck/servecheck/internal/probe"
-	"github.com/servecheck/servecheck/internal/recipes"
+	"github.com/SiluPanda/servecheck/internal/probe"
+	"github.com/SiluPanda/servecheck/internal/recipes"
 )
 
 func init() {

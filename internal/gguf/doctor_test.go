@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/servecheck/servecheck/internal/probe"
+	"github.com/SiluPanda/servecheck/internal/probe"
 )
 
 // Realistic Qwen3 template that retroactively strips Turn 1 <think> blocks using ns.last_query_index

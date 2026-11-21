@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/servecheck/servecheck/internal/client"
-	"github.com/servecheck/servecheck/internal/recipes"
+	"github.com/SiluPanda/servecheck/internal/client"
+	"github.com/SiluPanda/servecheck/internal/recipes"
 )
 
 // Config controls how a probe suite run executes.

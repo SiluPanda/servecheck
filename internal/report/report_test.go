@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/servecheck/servecheck/internal/gguf"
-	"github.com/servecheck/servecheck/internal/probe"
-	"github.com/servecheck/servecheck/internal/recipes"
+	"github.com/SiluPanda/servecheck/internal/gguf"
+	"github.com/SiluPanda/servecheck/internal/probe"
+	"github.com/SiluPanda/servecheck/internal/recipes"
 )
 
 func sampleRunResult() *probe.RunResult {

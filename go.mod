@@ -1,4 +1,4 @@
-module github.com/servecheck/servecheck
+module github.com/SiluPanda/servecheck
 
 go 1.25.0
 

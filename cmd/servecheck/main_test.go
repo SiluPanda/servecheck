@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/servecheck/servecheck/internal/client"
+	"github.com/SiluPanda/servecheck/internal/client"
 )
 
 func buildMinimalGGUF(path, arch, name, tmpl string) error {

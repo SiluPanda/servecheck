@@ -1,5 +1,9 @@
 # servecheck
 
+[![CI](https://github.com/SiluPanda/servecheck/actions/workflows/ci.yml/badge.svg)](https://github.com/SiluPanda/servecheck/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/SiluPanda/servecheck)](https://github.com/SiluPanda/servecheck/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **15-second conformance probe & offline GGUF/Jinja2 doctor for local and self-hosted OpenAI-compatible LLM servers (`vLLM`, `llama-server`, `SGLang`, `Ollama`, `mlx-lm`).**
 
 `servecheck` catches the silent server-side tool-calling, `<think>`-tag, streaming, and KV-cache bugs that break coding agents — and prints **exact copy-paste server CLI flag fixes**.
@@ -82,19 +86,33 @@ Summary: 4 PASS, 1 WARN, 1 FAIL (exit 1)
 
 ## Install
 
-Requires Go 1.26+:
+### Pre-built static binary (macOS & Linux, SHA-256 verified)
 
 ```bash
-git clone https://github.com/servecheck/servecheck.git
+curl -fsSL https://raw.githubusercontent.com/SiluPanda/servecheck/main/install.sh | sh
+```
+
+Or download tarballs + `checksums.txt` directly from [GitHub Releases](https://github.com/SiluPanda/servecheck/releases).
+
+### Homebrew formula
+
+```bash
+brew install --formula https://raw.githubusercontent.com/SiluPanda/servecheck/main/packaging/homebrew/servecheck.rb
+```
+
+### `go install` (Go 1.25+, zero CGo)
+
+```bash
+CGO_ENABLED=0 go install github.com/SiluPanda/servecheck/cmd/servecheck@latest
+```
+
+### Build from source
+
+```bash
+git clone https://github.com/SiluPanda/servecheck.git
 cd servecheck
 make build
 ./bin/servecheck version
-```
-
-Or install directly to `$GOPATH/bin`:
-
-```bash
-make install
 ```
 
 ---

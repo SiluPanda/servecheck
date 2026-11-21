@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/servecheck/servecheck/internal/client"
-	"github.com/servecheck/servecheck/internal/probe"
+	"github.com/SiluPanda/servecheck/internal/client"
+	"github.com/SiluPanda/servecheck/internal/probe"
 )
 
 type mockServerFaults struct {
